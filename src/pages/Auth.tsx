@@ -96,10 +96,21 @@ export default function Auth() {
       const { data: profile, error: lookupError } = await supabase
         .from('profiles')
         .select('email')
-        .eq('username', username)
-        .single();
+        .eq('username', username.toLowerCase().trim())
+        .maybeSingle();
 
-      if (lookupError || !profile) {
+      if (lookupError) {
+        console.error('Lookup error:', lookupError);
+        toast({
+          variant: 'destructive',
+          title: 'Erro ao entrar',
+          description: 'Erro ao buscar usuário',
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      if (!profile) {
         toast({
           variant: 'destructive',
           title: 'Erro ao entrar',
