@@ -30,7 +30,7 @@ interface NavItem {
 const navigation: NavItem[] = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Clientes', href: '/clients', icon: Users },
-  { name: 'Relatórios', href: '/reports', icon: FileText },
+  { name: 'Relatórios', href: '/reports', icon: FileText, adminOnly: true },
   { name: 'Usuários', href: '/users', icon: UserCog, adminOnly: true },
 ];
 
