@@ -21,10 +21,17 @@ export default function Clients() {
   const { data: clients, isLoading } = useClients();
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filteredClients = clients?.filter(client =>
-    client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.cnpj.includes(searchTerm)
-  ) || [];
+  // Normalize CNPJ for search (remove formatting)
+  const normalizeCNPJ = (value: string) => value.replace(/\D/g, '');
+
+  const filteredClients = clients?.filter(client => {
+    const normalizedSearch = normalizeCNPJ(searchTerm);
+    const normalizedCNPJ = normalizeCNPJ(client.cnpj);
+    
+    return client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      normalizedCNPJ.includes(normalizedSearch) ||
+      client.cnpj.includes(searchTerm);
+  }) || [];
 
   if (isLoading) {
     return (

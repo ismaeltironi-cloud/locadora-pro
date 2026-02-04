@@ -28,6 +28,9 @@ export default function Dashboard() {
 
   const isLoading = clientsLoading || vehiclesLoading;
 
+  // Normalize CNPJ for search (remove formatting)
+  const normalizeCNPJ = (value: string) => value.replace(/\D/g, '');
+
   // Calculate stats
   const totalVehicles = vehicles?.length || 0;
   const aguardandoEntrada = vehicles?.filter(v => v.status === 'aguardando_entrada').length || 0;
@@ -40,8 +43,12 @@ export default function Dashboard() {
     const clientVehicles = vehicles?.filter(v => v.client_id === client.id) || [];
     const hasPending = clientVehicles.some(v => v.status === 'aguardando_entrada');
     
+    const normalizedSearch = normalizeCNPJ(searchTerm);
+    const normalizedCNPJ = normalizeCNPJ(client.cnpj);
+    
     const matchesSearch = searchTerm === '' || 
       client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      normalizedCNPJ.includes(normalizedSearch) ||
       client.cnpj.includes(searchTerm);
 
     return hasPending && matchesSearch;
