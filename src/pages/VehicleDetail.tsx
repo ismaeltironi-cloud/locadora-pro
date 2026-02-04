@@ -22,7 +22,8 @@ import {
   XCircle,
   Image,
   Edit,
-  Ban
+  Ban,
+  ClipboardCheck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -49,9 +50,10 @@ export default function VehicleDetail() {
   const addPhoto = useAddVehiclePhoto();
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [photoDialogOpen, setPhotoDialogOpen] = useState(false);
+  const [manualCheckinDialogOpen, setManualCheckinDialogOpen] = useState(false);
   const [photoType, setPhotoType] = useState<'checkin' | 'checkout'>('checkin');
   const [isUploading, setIsUploading] = useState(false);
+  const [isManualCheckin, setIsManualCheckin] = useState(false);
   const [editForm, setEditForm] = useState({ plate: '', model: '' });
   
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -138,6 +140,28 @@ export default function VehicleDetail() {
         title: 'Veículo cancelado',
         description: 'O status do veículo foi alterado para cancelado.',
       });
+    }
+  };
+
+  const handleManualCheckin = async () => {
+    if (!vehicle) return;
+    
+    setIsManualCheckin(true);
+    try {
+      await updateStatus.mutateAsync({ id: vehicle.id, status: 'check_in' });
+      toast({
+        title: 'Check-in manual realizado',
+        description: 'O status do veículo foi alterado para check-in sem registro de foto.',
+      });
+      setManualCheckinDialogOpen(false);
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Erro ao realizar check-in',
+        description: error.message,
+      });
+    } finally {
+      setIsManualCheckin(false);
     }
   };
 
@@ -242,6 +266,15 @@ export default function VehicleDetail() {
                       <Camera className="mr-2 h-4 w-4" />
                     )}
                     Realizar Check-in
+                  </Button>
+                )}
+                {isAdmin && vehicle.status === 'aguardando_entrada' && (
+                  <Button 
+                    variant="secondary" 
+                    onClick={() => setManualCheckinDialogOpen(true)}
+                  >
+                    <ClipboardCheck className="mr-2 h-4 w-4" />
+                    Check-in Manual
                   </Button>
                 )}
                 {canDoCheckout && (
@@ -373,6 +406,36 @@ export default function VehicleDetail() {
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : null}
                 Salvar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Manual Check-in Dialog */}
+        <Dialog open={manualCheckinDialogOpen} onOpenChange={setManualCheckinDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Check-in Manual</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <p className="text-muted-foreground">
+                Você está prestes a realizar o check-in manual do veículo <strong>{vehicle.plate}</strong> sem registro de foto.
+              </p>
+              <p className="text-sm text-warning mt-2">
+                ⚠️ Esta ação é exclusiva para administradores e deve ser usada apenas em casos excepcionais.
+              </p>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setManualCheckinDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleManualCheckin} disabled={isManualCheckin}>
+                {isManualCheckin ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <ClipboardCheck className="mr-2 h-4 w-4" />
+                )}
+                Confirmar Check-in
               </Button>
             </DialogFooter>
           </DialogContent>
