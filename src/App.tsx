@@ -36,6 +36,28 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading, isAdmin } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  if (!isAdmin) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <>{children}</>;
+}
+
 function AppRoutes() {
   return (
     <Routes>
@@ -91,17 +113,17 @@ function AppRoutes() {
       <Route
         path="/users"
         element={
-          <ProtectedRoute>
+          <AdminRoute>
             <Users />
-          </ProtectedRoute>
+          </AdminRoute>
         }
       />
       <Route
         path="/reports"
         element={
-          <ProtectedRoute>
+          <AdminRoute>
             <Reports />
-          </ProtectedRoute>
+          </AdminRoute>
         }
       />
       <Route path="*" element={<NotFound />} />
