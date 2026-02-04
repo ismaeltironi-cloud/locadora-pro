@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { useClients } from '@/hooks/useClients';
-import { useVehicles, useVehiclePhotos } from '@/hooks/useVehicles';
+import { useVehicles } from '@/hooks/useVehicles';
+import { useUsers } from '@/hooks/useUsers';
 import { statusLabels } from '@/types';
 import { FileText, Download, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -16,12 +17,16 @@ import autoTable from 'jspdf-autotable';
 export default function Reports() {
   const { data: clients } = useClients();
   const { data: vehicles, isLoading } = useVehicles();
+  const { data: users } = useUsers();
   const [selectedClient, setSelectedClient] = useState<string>('all');
+  const [selectedUser, setSelectedUser] = useState<string>('all');
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const filteredVehicles = vehicles?.filter(v => 
-    selectedClient === 'all' || v.client_id === selectedClient
-  ) || [];
+  const filteredVehicles = vehicles?.filter(v => {
+    const matchesClient = selectedClient === 'all' || v.client_id === selectedClient;
+    const matchesUser = selectedUser === 'all' || v.created_by === selectedUser;
+    return matchesClient && matchesUser;
+  }) || [];
 
   const generatePDF = async () => {
     setIsGenerating(true);
@@ -39,9 +44,16 @@ export default function Reports() {
       doc.setTextColor(100);
       doc.text(`Gerado em: ${format(new Date(), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`, pageWidth / 2, 28, { align: 'center' });
 
+      let yOffset = 28;
       if (selectedClient !== 'all') {
         const client = clients?.find(c => c.id === selectedClient);
-        doc.text(`Cliente: ${client?.name || 'N/A'}`, pageWidth / 2, 34, { align: 'center' });
+        doc.text(`Cliente: ${client?.name || 'N/A'}`, pageWidth / 2, yOffset + 6, { align: 'center' });
+        yOffset += 6;
+      }
+      if (selectedUser !== 'all') {
+        const user = users?.find(u => u.id === selectedUser);
+        doc.text(`Usuário: ${user?.full_name || 'N/A'}`, pageWidth / 2, yOffset + 6, { align: 'center' });
+        yOffset += 6;
       }
 
       // Summary
@@ -124,21 +136,40 @@ export default function Reports() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Filtrar por cliente</Label>
-              <Select value={selectedClient} onValueChange={setSelectedClient}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todos os clientes" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos os clientes</SelectItem>
-                  {clients?.map(client => (
-                    <SelectItem key={client.id} value={client.id}>
-                      {client.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Filtrar por cliente</Label>
+                <Select value={selectedClient} onValueChange={setSelectedClient}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todos os clientes" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os clientes</SelectItem>
+                    {clients?.map(client => (
+                      <SelectItem key={client.id} value={client.id}>
+                        {client.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Filtrar por usuário</Label>
+                <Select value={selectedUser} onValueChange={setSelectedUser}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todos os usuários" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os usuários</SelectItem>
+                    {users?.map(user => (
+                      <SelectItem key={user.id} value={user.id}>
+                        {user.full_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="pt-4 border-t">
