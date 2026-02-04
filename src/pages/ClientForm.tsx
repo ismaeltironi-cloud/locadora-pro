@@ -117,13 +117,13 @@ export default function ClientForm() {
         phone = formatPhone(phoneDigits);
       }
 
-      setFormData({
-        ...formData,
-        name: data.nome_fantasia || data.razao_social || formData.name,
-        address: addressParts.join(', ') || formData.address,
-        phone: phone || formData.phone,
-        email: data.email?.toLowerCase() || formData.email,
-      });
+      setFormData(prev => ({
+        ...prev,
+        name: data.nome_fantasia || data.razao_social || prev.name,
+        address: addressParts.join(', ') || prev.address,
+        phone: phone || prev.phone,
+        email: data.email?.toLowerCase() || prev.email,
+      }));
 
       toast({
         title: 'Dados encontrados',
