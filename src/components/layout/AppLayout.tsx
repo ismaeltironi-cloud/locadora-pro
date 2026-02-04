@@ -6,7 +6,6 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   LayoutDashboard, 
   Users, 
-  Car, 
   UserCog,
   LogOut,
   Menu,
@@ -15,6 +14,7 @@ import {
   FileText
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import logo from '@/assets/logo.ico';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -69,9 +69,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
       >
         <div className="flex h-16 items-center justify-between px-4 border-b border-sidebar-border">
           <Link to="/" className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary">
-              <Car className="h-5 w-5 text-sidebar-primary-foreground" />
-            </div>
+            <img src={logo} alt="Urso Auto Service" className="h-9 w-9 rounded-lg" />
             <span className="text-lg font-semibold text-sidebar-foreground">Urso Auto Service</span>
           </Link>
           <Button

@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Car, Loader2, UserPlus } from 'lucide-react';
+import { Loader2, UserPlus } from 'lucide-react';
+import logo from '@/assets/logo.ico';
 
 export default function Auth() {
   const [username, setUsername] = useState('');
@@ -231,8 +232,8 @@ export default function Auth() {
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/10 via-background to-accent/10 p-4">
       <Card className="w-full max-w-md shadow-card animate-fade-in">
         <CardHeader className="space-y-4 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full gradient-hero">
-            <Car className="h-8 w-8 text-primary-foreground" />
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full overflow-hidden">
+            <img src={logo} alt="Urso Auto Service" className="h-16 w-16 object-contain" />
           </div>
           <div>
             <CardTitle className="text-2xl font-bold">Urso Auto Service</CardTitle>
