@@ -55,6 +55,7 @@ export default function Users() {
     email: '',
     password: '',
     fullName: '',
+    username: '',
     role: 'viewer' as AppRole,
     can_view: true,
     can_edit: false,
@@ -64,7 +65,8 @@ export default function Users() {
 
   const filteredUsers = users?.filter(user =>
     user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false)
   ) || [];
 
   const handleEditClick = (user: UserWithRole) => {
@@ -95,6 +97,7 @@ export default function Users() {
       email: '',
       password: '',
       fullName: '',
+      username: '',
       role: 'viewer',
       can_view: true,
       can_edit: false,
@@ -132,7 +135,7 @@ export default function Users() {
         <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Buscar por nome ou email..."
+            placeholder="Buscar por nome, usuário ou email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-9"
@@ -155,7 +158,7 @@ export default function Users() {
                   <div className="flex-1 space-y-2">
                     <div>
                       <h3 className="font-semibold">{user.full_name}</h3>
-                      <p className="text-sm text-muted-foreground">{user.email}</p>
+                      <p className="text-sm text-muted-foreground">@{user.username || user.email.split('@')[0]}</p>
                     </div>
                     <Badge 
                       variant="outline"
@@ -201,7 +204,7 @@ export default function Users() {
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <p className="text-sm font-medium">{editUser?.full_name}</p>
-                <p className="text-sm text-muted-foreground">{editUser?.email}</p>
+                <p className="text-sm text-muted-foreground">@{editUser?.username || editUser?.email.split('@')[0]}</p>
               </div>
               
               <div className="space-y-2">
@@ -294,6 +297,15 @@ export default function Users() {
                 />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="create-username">Usuário *</Label>
+                <Input
+                  id="create-username"
+                  value={createForm.username}
+                  onChange={(e) => setCreateForm({ ...createForm, username: e.target.value })}
+                  placeholder="nome.usuario"
+                />
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="create-email">Email *</Label>
                 <Input
                   id="create-email"
@@ -369,7 +381,7 @@ export default function Users() {
               </Button>
               <Button 
                 onClick={handleCreateUser} 
-                disabled={createUser.isPending || !createForm.email || !createForm.password || !createForm.fullName}
+                disabled={createUser.isPending || !createForm.email || !createForm.password || !createForm.fullName || !createForm.username}
               >
                 {createUser.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Criar Usuário

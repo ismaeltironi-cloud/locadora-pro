@@ -10,13 +10,14 @@ import { useToast } from '@/hooks/use-toast';
 import { Car, Loader2, UserPlus } from 'lucide-react';
 
 export default function Auth() {
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isBootstrap, setIsBootstrap] = useState(false);
   const [checkingBootstrap, setCheckingBootstrap] = useState(true);
-  const { signIn, user, loading } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -61,7 +62,7 @@ export default function Auth() {
 
     try {
       const { data, error } = await supabase.functions.invoke('bootstrap-admin', {
-        body: { email, password, fullName },
+        body: { email, password, fullName, username },
       });
 
       if (error) {
@@ -89,18 +90,47 @@ export default function Auth() {
     e.preventDefault();
     setIsLoading(true);
 
-    const { error } = await signIn(email, password);
+    try {
+      // Lookup email by username
+      const { data: profile, error: lookupError } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('username', username)
+        .single();
 
-    if (error) {
+      if (lookupError || !profile) {
+        toast({
+          variant: 'destructive',
+          title: 'Erro ao entrar',
+          description: 'Usuário não encontrado',
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      // Sign in with the email
+      const { error } = await supabase.auth.signInWithPassword({
+        email: profile.email,
+        password,
+      });
+
+      if (error) {
+        toast({
+          variant: 'destructive',
+          title: 'Erro ao entrar',
+          description: error.message === 'Invalid login credentials'
+            ? 'Usuário ou senha incorretos'
+            : error.message,
+        });
+      } else {
+        navigate('/');
+      }
+    } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Erro ao entrar',
-        description: error.message === 'Invalid login credentials'
-          ? 'Email ou senha incorretos'
-          : error.message,
+        description: 'Erro desconhecido',
       });
-    } else {
-      navigate('/');
     }
 
     setIsLoading(false);
@@ -139,6 +169,18 @@ export default function Auth() {
                   placeholder="Seu nome"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="bootstrapUsername">Usuário</Label>
+                <Input
+                  id="bootstrapUsername"
+                  type="text"
+                  placeholder="admin"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   required
                   disabled={isLoading}
                 />
@@ -202,13 +244,13 @@ export default function Auth() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="username">Usuário</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="seu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="username"
+                type="text"
+                placeholder="seu.usuario"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
                 disabled={isLoading}
               />

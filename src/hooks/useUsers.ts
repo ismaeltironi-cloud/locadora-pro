@@ -103,6 +103,7 @@ export function useCreateUser() {
       email,
       password,
       fullName,
+      username,
       role,
       can_view,
       can_edit,
@@ -112,6 +113,7 @@ export function useCreateUser() {
       email: string;
       password: string;
       fullName: string;
+      username: string;
       role: AppRole;
       can_view: boolean;
       can_edit: boolean;
@@ -140,6 +142,7 @@ export function useCreateUser() {
           id: authData.user.id,
           email,
           full_name: fullName,
+          username,
         });
 
       if (profileError) throw profileError;
