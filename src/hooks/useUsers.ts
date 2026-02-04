@@ -120,48 +120,25 @@ export function useCreateUser() {
       can_checkin: boolean;
       can_checkout: boolean;
     }) => {
-      // Create auth user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-          data: {
-            full_name: fullName,
-          },
-        },
-      });
-
-      if (authError) throw authError;
-      if (!authData.user) throw new Error('Erro ao criar usuário');
-
-      // Create profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: authData.user.id,
+      // Call edge function to create user (requires admin privileges)
+      const { data, error } = await supabase.functions.invoke('create-user', {
+        body: {
           email,
-          full_name: fullName,
+          password,
+          fullName,
           username,
-        });
-
-      if (profileError) throw profileError;
-
-      // Create user role
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({
-          user_id: authData.user.id,
           role,
           can_view,
           can_edit,
           can_checkin,
           can_checkout,
-        });
+        },
+      });
 
-      if (roleError) throw roleError;
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
 
-      return authData.user;
+      return data.user;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
