@@ -41,10 +41,10 @@ serve(async (req) => {
       // No body or invalid JSON
     }
 
-    const { email, password, fullName, checkOnly } = body as any
+    const { email, password, fullName, username, checkOnly } = body as any
 
     // If just checking, return that no users exist
-    if (checkOnly || !email || !password || !fullName) {
+    if (checkOnly || !email || !password || !fullName || !username) {
       return new Response(
         JSON.stringify({ exists: false, needsBootstrap: true }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -69,6 +69,7 @@ serve(async (req) => {
         id: authData.user.id,
         email,
         full_name: fullName,
+        username,
       })
 
     if (profileError) {

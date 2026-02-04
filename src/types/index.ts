@@ -4,6 +4,7 @@ export type VehicleStatus = 'aguardando_entrada' | 'check_in' | 'check_out' | 'c
 export interface Profile {
   id: string;
   email: string;
+  username: string | null;
   full_name: string;
   created_at: string;
   updated_at: string;
