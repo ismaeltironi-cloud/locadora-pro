@@ -235,7 +235,7 @@ export default function Auth() {
             <Car className="h-8 w-8 text-primary-foreground" />
           </div>
           <div>
-            <CardTitle className="text-2xl font-bold">FleetControl</CardTitle>
+            <CardTitle className="text-2xl font-bold">Urso Auto Service</CardTitle>
             <CardDescription>
               Entre com suas credenciais para acessar o sistema
             </CardDescription>
