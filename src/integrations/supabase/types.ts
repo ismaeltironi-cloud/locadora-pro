@@ -155,6 +155,7 @@ export type Database = {
           defect_description: string | null
           id: string
           model: string
+          needs_tow: boolean | null
           plate: string
           status: Database["public"]["Enums"]["vehicle_status"] | null
           updated_at: string | null
@@ -168,6 +169,7 @@ export type Database = {
           defect_description?: string | null
           id?: string
           model: string
+          needs_tow?: boolean | null
           plate: string
           status?: Database["public"]["Enums"]["vehicle_status"] | null
           updated_at?: string | null
@@ -181,6 +183,7 @@ export type Database = {
           defect_description?: string | null
           id?: string
           model?: string
+          needs_tow?: boolean | null
           plate?: string
           status?: Database["public"]["Enums"]["vehicle_status"] | null
           updated_at?: string | null

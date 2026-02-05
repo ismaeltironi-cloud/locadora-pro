@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useClient } from '@/hooks/useClients';
@@ -23,6 +24,7 @@ export default function VehicleForm() {
     plate: '',
     model: '',
     defect_description: '',
+    needs_tow: false,
   });
 
   const [debouncedPlate, setDebouncedPlate] = useState('');
@@ -53,6 +55,7 @@ export default function VehicleForm() {
         plate: formData.plate.toUpperCase(),
         model: formData.model,
         defect_description: formData.defect_description || null,
+        needs_tow: formData.needs_tow,
         status: 'aguardando_entrada',
         created_by: user?.id || null,
       });
@@ -146,6 +149,17 @@ export default function VehicleForm() {
                   placeholder="Descreva o defeito ou problema do veículo..."
                   rows={4}
                 />
+              </div>
+
+              <div className="flex items-center space-x-2 pt-2">
+                <Checkbox
+                  id="needs_tow"
+                  checked={formData.needs_tow}
+                  onCheckedChange={(checked) => setFormData({ ...formData, needs_tow: checked === true })}
+                />
+                <Label htmlFor="needs_tow" className="cursor-pointer">
+                  Veículo precisa de Guincho
+                </Label>
               </div>
 
               <div className="flex gap-3 pt-4">

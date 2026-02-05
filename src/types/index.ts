@@ -42,6 +42,7 @@ export interface Vehicle {
   checkin_at: string | null;
   checkout_at: string | null;
   created_by: string | null;
+  needs_tow: boolean;
   created_at: string;
   updated_at: string;
   client?: Client;
