@@ -38,6 +38,7 @@ export interface Vehicle {
   plate: string;
   model: string;
   status: VehicleStatus;
+  defect_description: string | null;
   checkin_at: string | null;
   checkout_at: string | null;
   created_by: string | null;

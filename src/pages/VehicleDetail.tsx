@@ -249,6 +249,14 @@ export default function VehicleDetail() {
               )}
             </div>
 
+            {/* Defect description */}
+            {vehicle.defect_description && (
+              <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+                <p className="text-sm font-medium mb-1">Descrição do Defeito:</p>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{vehicle.defect_description}</p>
+              </div>
+            )}
+
             {/* Actions */}
             {!isLocked && (
               <div className="flex flex-wrap gap-3 mt-6 pt-4 border-t">
