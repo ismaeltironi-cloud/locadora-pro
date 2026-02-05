@@ -16,8 +16,13 @@ import {
   Search,
   Plus,
   Loader2,
-  Users
+  Users,
+  Wrench
 } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { statusLabels, statusColors } from '@/types';
+import { cn } from '@/lib/utils';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -53,6 +58,31 @@ export default function Dashboard() {
 
     return hasPending && matchesSearch;
   }) || [];
+
+  // Get vehicles in service (check_in status)
+  const vehiclesInService = vehicles?.filter(v => {
+    const matchesStatus = v.status === 'check_in';
+    
+    if (!searchTerm) return matchesStatus;
+    
+    const normalizedSearch = normalizeCNPJ(searchTerm);
+    const client = clients?.find(c => c.id === v.client_id);
+    const normalizedCNPJ = client ? normalizeCNPJ(client.cnpj) : '';
+    
+    return matchesStatus && (
+      v.plate.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      v.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      normalizedCNPJ.includes(normalizedSearch)
+    );
+  }) || [];
+
+  const badgeVariants: Record<string, string> = {
+    warning: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+    primary: 'bg-blue-100 text-blue-800 border-blue-300',
+    success: 'bg-green-100 text-green-800 border-green-300',
+    destructive: 'bg-red-100 text-red-800 border-red-300',
+  };
 
   if (isLoading) {
     return (
@@ -151,6 +181,61 @@ export default function Dashboard() {
             <h3 className="mt-4 text-lg font-medium">Nenhum cliente com pendências</h3>
             <p className="mt-1 text-sm text-muted-foreground">
               {searchTerm ? 'Nenhum resultado encontrado para a busca.' : 'Todos os veículos foram processados.'}
+            </p>
+          </div>
+        )}
+
+        {/* Section title - Vehicles in service */}
+        <div className="flex items-center gap-2 mt-8">
+          <Wrench className="h-5 w-5 text-muted-foreground" />
+          <h2 className="text-lg font-semibold">Veículos em Atendimento</h2>
+        </div>
+
+        {/* Vehicles in service grid */}
+        {vehiclesInService.length > 0 ? (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {vehiclesInService.map(vehicle => {
+              const client = clients?.find(c => c.id === vehicle.client_id);
+              return (
+                <Card 
+                  key={vehicle.id}
+                  className="shadow-card cursor-pointer transition-all hover:shadow-card-hover hover:-translate-y-0.5"
+                  onClick={() => navigate(`/clients/${vehicle.client_id}/vehicles/${vehicle.id}`)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                          <Car className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-semibold">{vehicle.plate}</p>
+                          <p className="text-sm text-muted-foreground">{vehicle.model}</p>
+                        </div>
+                      </div>
+                      <Badge 
+                        variant="outline"
+                        className={cn("text-xs", badgeVariants[statusColors[vehicle.status]])}
+                      >
+                        {statusLabels[vehicle.status]}
+                      </Badge>
+                    </div>
+                    {client && (
+                      <div className="mt-3 pt-3 border-t">
+                        <p className="text-sm text-muted-foreground truncate">{client.name}</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center rounded-lg border border-dashed bg-muted/30 p-8">
+            <Wrench className="h-10 w-10 text-muted-foreground/50" />
+            <h3 className="mt-3 text-base font-medium">Nenhum veículo em atendimento</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {searchTerm ? 'Nenhum resultado encontrado.' : 'Não há veículos sendo atendidos no momento.'}
             </p>
           </div>
         )}
