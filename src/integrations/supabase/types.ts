@@ -152,6 +152,7 @@ export type Database = {
           client_id: string
           created_at: string | null
           created_by: string | null
+          defect_description: string | null
           id: string
           model: string
           plate: string
@@ -164,6 +165,7 @@ export type Database = {
           client_id: string
           created_at?: string | null
           created_by?: string | null
+          defect_description?: string | null
           id?: string
           model: string
           plate: string
@@ -176,6 +178,7 @@ export type Database = {
           client_id?: string
           created_at?: string | null
           created_by?: string | null
+          defect_description?: string | null
           id?: string
           model?: string
           plate?: string

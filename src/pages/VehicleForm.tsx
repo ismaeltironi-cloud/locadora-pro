@@ -4,6 +4,7 @@ import AppLayout from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useClient } from '@/hooks/useClients';
@@ -21,6 +22,7 @@ export default function VehicleForm() {
   const [formData, setFormData] = useState({
     plate: '',
     model: '',
+    defect_description: '',
   });
 
   const [debouncedPlate, setDebouncedPlate] = useState('');
@@ -50,6 +52,7 @@ export default function VehicleForm() {
         client_id: clientId!,
         plate: formData.plate.toUpperCase(),
         model: formData.model,
+        defect_description: formData.defect_description || null,
         status: 'aguardando_entrada',
         created_by: user?.id || null,
       });
@@ -131,6 +134,17 @@ export default function VehicleForm() {
                   onChange={(e) => setFormData({ ...formData, model: e.target.value })}
                   placeholder="Ex: Fiat Uno 2020"
                   required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="defect_description">Descrição do Defeito</Label>
+                <Textarea
+                  id="defect_description"
+                  value={formData.defect_description}
+                  onChange={(e) => setFormData({ ...formData, defect_description: e.target.value })}
+                  placeholder="Descreva o defeito ou problema do veículo..."
+                  rows={4}
                 />
               </div>
 
