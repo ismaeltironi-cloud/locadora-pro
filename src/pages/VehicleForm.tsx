@@ -25,6 +25,7 @@ export default function VehicleForm() {
   const [formData, setFormData] = useState({
     plate: '',
     model: '',
+    km: '',
     defect_description: '',
     needs_tow: false,
     selected_client_id: clientId || '',
@@ -44,8 +45,12 @@ export default function VehicleForm() {
 
   // Auto-fill model if vehicle exists
   useEffect(() => {
-    if (existingVehicle && formData.model === '') {
-      setFormData(prev => ({ ...prev, model: existingVehicle.model }));
+    if (existingVehicle) {
+      setFormData(prev => ({ 
+        ...prev, 
+        model: prev.model === '' ? existingVehicle.model : prev.model,
+        km: prev.km === '' && existingVehicle.km ? String(existingVehicle.km) : prev.km,
+      }));
     }
   }, [existingVehicle]);
 
@@ -76,6 +81,7 @@ export default function VehicleForm() {
         model: formData.model,
         defect_description: formData.defect_description || null,
         needs_tow: formData.needs_tow,
+        km: formData.km ? parseInt(formData.km, 10) : null,
         status: 'aguardando_entrada',
         created_by: user?.id || null,
       });
@@ -186,6 +192,17 @@ export default function VehicleForm() {
                   onChange={(e) => setFormData({ ...formData, model: e.target.value })}
                   placeholder="Ex: Fiat Uno 2020"
                   required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="km">KM</Label>
+                <Input
+                  id="km"
+                  type="number"
+                  value={formData.km}
+                  onChange={(e) => setFormData({ ...formData, km: e.target.value })}
+                  placeholder="Ex: 50000"
                 />
               </div>
 

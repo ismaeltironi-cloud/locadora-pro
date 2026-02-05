@@ -154,6 +154,7 @@ export type Database = {
           created_by: string | null
           defect_description: string | null
           id: string
+          km: number | null
           model: string
           needs_tow: boolean | null
           plate: string
@@ -168,6 +169,7 @@ export type Database = {
           created_by?: string | null
           defect_description?: string | null
           id?: string
+          km?: number | null
           model: string
           needs_tow?: boolean | null
           plate: string
@@ -182,6 +184,7 @@ export type Database = {
           created_by?: string | null
           defect_description?: string | null
           id?: string
+          km?: number | null
           model?: string
           needs_tow?: boolean | null
           plate?: string
