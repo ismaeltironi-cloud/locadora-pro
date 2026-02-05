@@ -134,7 +134,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <span className="font-semibold">Urso Auto Service</span>
+          <Link to="/" className="font-semibold">Urso Auto Service</Link>
         </header>
 
         {/* Page content */}
