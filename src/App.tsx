@@ -103,6 +103,14 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/vehicles/new"
+        element={
+          <ProtectedRoute>
+            <VehicleForm />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/clients/:clientId/vehicles/:vehicleId"
         element={
           <ProtectedRoute>
