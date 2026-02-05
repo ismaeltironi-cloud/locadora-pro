@@ -52,6 +52,12 @@ export default function Clients() {
             <h1 className="text-2xl font-bold">Clientes</h1>
             <p className="text-muted-foreground">Gerencie os clientes cadastrados</p>
           </div>
+          {canEdit && (
+            <Button onClick={() => navigate('/clients/new')}>
+              <Plus className="mr-2 h-4 w-4" />
+              Criar Novo Cliente
+            </Button>
+          )}
         </div>
 
         {/* Search */}
