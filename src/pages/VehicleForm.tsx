@@ -8,7 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useClient } from '@/hooks/useClients';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useClient, useClients } from '@/hooks/useClients';
 import { useCreateVehicle, useVehicleByPlate } from '@/hooks/useVehicles';
 import { useAuth } from '@/contexts/AuthContext';
 import { ArrowLeft, Loader2, Car, Info } from 'lucide-react';
@@ -17,7 +18,8 @@ export default function VehicleForm() {
   const { clientId } = useParams<{ clientId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { data: client, isLoading: clientLoading } = useClient(clientId!);
+  const { data: client, isLoading: clientLoading } = useClient(clientId || '');
+  const { data: clients, isLoading: clientsLoading } = useClients();
   const createVehicle = useCreateVehicle();
   
   const [formData, setFormData] = useState({
@@ -25,6 +27,7 @@ export default function VehicleForm() {
     model: '',
     defect_description: '',
     needs_tow: false,
+    selected_client_id: clientId || '',
   });
 
   const [debouncedPlate, setDebouncedPlate] = useState('');
@@ -46,12 +49,29 @@ export default function VehicleForm() {
     }
   }, [existingVehicle]);
 
+  // Update selected_client_id when clientId from params changes
+  useEffect(() => {
+    if (clientId) {
+      setFormData(prev => ({ ...prev, selected_client_id: clientId }));
+    }
+  }, [clientId]);
+
+  const isFromDashboard = !clientId;
+  const selectedClientId = formData.selected_client_id;
+  const selectedClient = isFromDashboard 
+    ? clients?.find(c => c.id === selectedClientId)
+    : client;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!selectedClientId) {
+      return;
+    }
+
     try {
       await createVehicle.mutateAsync({
-        client_id: clientId!,
+        client_id: selectedClientId,
         plate: formData.plate.toUpperCase(),
         model: formData.model,
         defect_description: formData.defect_description || null,
@@ -59,7 +79,11 @@ export default function VehicleForm() {
         status: 'aguardando_entrada',
         created_by: user?.id || null,
       });
-      navigate(`/clients/${clientId}`);
+      if (isFromDashboard) {
+        navigate('/');
+      } else {
+        navigate(`/clients/${clientId}`);
+      }
     } catch (error) {
       // Error handled in hook
     }
@@ -69,7 +93,9 @@ export default function VehicleForm() {
     return value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 7);
   };
 
-  if (clientLoading) {
+  const isLoading = clientId ? clientLoading : clientsLoading;
+
+  if (isLoading) {
     return (
       <AppLayout>
         <div className="flex h-full items-center justify-center">
@@ -85,7 +111,7 @@ export default function VehicleForm() {
         <Button 
           variant="ghost" 
           className="mb-4"
-          onClick={() => navigate(`/clients/${clientId}`)}
+          onClick={() => isFromDashboard ? navigate('/') : navigate(`/clients/${clientId}`)}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Voltar
@@ -99,12 +125,35 @@ export default function VehicleForm() {
               </div>
               <div>
                 <CardTitle>Novo Veículo</CardTitle>
-                <p className="text-sm text-muted-foreground">Cliente: {client?.name}</p>
+                {selectedClient && (
+                  <p className="text-sm text-muted-foreground">Cliente: {selectedClient.name}</p>
+                )}
               </div>
             </div>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {isFromDashboard && (
+                <div className="space-y-2">
+                  <Label htmlFor="client">Cliente *</Label>
+                  <Select
+                    value={formData.selected_client_id}
+                    onValueChange={(value) => setFormData({ ...formData, selected_client_id: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um cliente" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {clients?.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.name} - {c.cnpj}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="plate">Placa *</Label>
                 <Input
@@ -166,7 +215,7 @@ export default function VehicleForm() {
                 <Button 
                   type="button" 
                   variant="outline" 
-                  onClick={() => navigate(`/clients/${clientId}`)}
+                  onClick={() => isFromDashboard ? navigate('/') : navigate(`/clients/${clientId}`)}
                   className="flex-1"
                 >
                   Cancelar
@@ -174,7 +223,7 @@ export default function VehicleForm() {
                 <Button 
                   type="submit" 
                   className="flex-1"
-                  disabled={createVehicle.isPending}
+                  disabled={createVehicle.isPending || (isFromDashboard && !selectedClientId)}
                 >
                   {createVehicle.isPending ? (
                     <>

@@ -16,7 +16,8 @@ import {
   Plus,
   Loader2,
   Wrench,
-  Truck
+  Truck,
+  PlusCircle
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -104,12 +105,20 @@ export default function Dashboard() {
             <h1 className="text-2xl font-bold">Dashboard</h1>
             <p className="text-muted-foreground">Visão geral do sistema</p>
           </div>
-          {canEdit && (
-            <Button onClick={() => navigate('/clients/new')}>
-              <Plus className="mr-2 h-4 w-4" />
-              Novo Cliente
-            </Button>
-          )}
+          <div className="flex gap-2">
+            {canEdit && (
+              <>
+                <Button variant="outline" onClick={() => navigate('/vehicles/new')}>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Novo Veículo
+                </Button>
+                <Button onClick={() => navigate('/clients/new')}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Novo Cliente
+                </Button>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Stats */}
