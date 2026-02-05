@@ -158,7 +158,7 @@ export default function VehicleForm() {
                   onCheckedChange={(checked) => setFormData({ ...formData, needs_tow: checked === true })}
                 />
                 <Label htmlFor="needs_tow" className="cursor-pointer">
-                  Veículo precisa de Guincho
+                  Guincho
                 </Label>
               </div>
 
