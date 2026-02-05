@@ -62,7 +62,7 @@ export interface UserWithRole extends Profile {
 
 export const statusLabels: Record<VehicleStatus, string> = {
   aguardando_entrada: 'Aguardando Entrada',
-  check_in: 'Check-in Realizado',
+  check_in: 'Veículo em Atendimento',
   check_out: 'Atendimento Finalizado',
   cancelado: 'Cancelado',
 };
