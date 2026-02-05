@@ -71,7 +71,7 @@ export default function Reports() {
 
       autoTable(doc, {
         startY: 50,
-        head: [['Total', 'Aguardando Entrada', 'Check-in', 'Finalizados', 'Cancelado']],
+        head: [['Total', 'Aguardando', 'Em Atendimento', 'Finalizados', 'Cancelado']],
         body: [[summary.total, summary.aguardando, summary.checkin, summary.checkout, summary.cancelado]],
         theme: 'grid',
         headStyles: { fillColor: [26, 86, 219] },

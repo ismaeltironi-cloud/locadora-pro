@@ -157,7 +157,7 @@ export default function ClientDetail() {
               <SelectContent>
                 <SelectItem value="all">Todos os status</SelectItem>
                 <SelectItem value="aguardando_entrada">Aguardando Entrada</SelectItem>
-                <SelectItem value="check_in">Check-in Realizado</SelectItem>
+                <SelectItem value="check_in">Veículo em Atendimento</SelectItem>
                 <SelectItem value="check_out">Atendimento Finalizado</SelectItem>
                 <SelectItem value="cancelado">Cancelado</SelectItem>
               </SelectContent>

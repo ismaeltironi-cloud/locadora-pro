@@ -96,7 +96,7 @@ export default function Dashboard() {
             variant="warning"
           />
           <StatCard
-            title="Check-in Realizado"
+            title="Veículo em Atendimento"
             value={checkInCount}
             icon={<CheckCircle2 className="h-6 w-6" />}
             variant="primary"
