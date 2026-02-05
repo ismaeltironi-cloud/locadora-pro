@@ -102,7 +102,7 @@ export default function Dashboard() {
             variant="primary"
           />
           <StatCard
-            title="Check-out Realizado"
+            title="Atendimento Finalizado"
             value={checkOutCount}
             icon={<CheckCircle2 className="h-6 w-6" />}
             variant="success"
