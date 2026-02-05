@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppLayout from '@/components/layout/AppLayout';
 import StatCard from '@/components/dashboard/StatCard';
-import ClientCard from '@/components/dashboard/ClientCard';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useClients } from '@/hooks/useClients';
@@ -16,7 +15,6 @@ import {
   Search,
   Plus,
   Loader2,
-  Users,
   Wrench
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -43,20 +41,22 @@ export default function Dashboard() {
   const checkOutCount = vehicles?.filter(v => v.status === 'check_out').length || 0;
   const cancelledCount = vehicles?.filter(v => v.status === 'cancelado').length || 0;
 
-  // Filter clients with pending vehicles and search
-  const filteredClients = clients?.filter(client => {
-    const clientVehicles = vehicles?.filter(v => v.client_id === client.id) || [];
-    const hasPending = clientVehicles.some(v => v.status === 'aguardando_entrada');
+  // Filter vehicles awaiting pickup (aguardando_entrada)
+  const vehiclesAwaitingPickup = vehicles?.filter(v => {
+    const matchesStatus = v.status === 'aguardando_entrada';
+    
+    if (!searchTerm) return matchesStatus;
     
     const normalizedSearch = normalizeCNPJ(searchTerm);
-    const normalizedCNPJ = normalizeCNPJ(client.cnpj);
+    const client = clients?.find(c => c.id === v.client_id);
+    const normalizedCNPJ = client ? normalizeCNPJ(client.cnpj) : '';
     
-    const matchesSearch = searchTerm === '' || 
-      client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      normalizedCNPJ.includes(normalizedSearch) ||
-      client.cnpj.includes(searchTerm);
-
-    return hasPending && matchesSearch;
+    return matchesStatus && (
+      v.plate.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      v.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      normalizedCNPJ.includes(normalizedSearch)
+    );
   }) || [];
 
   // Get vehicles in service (check_in status)
@@ -160,27 +160,55 @@ export default function Dashboard() {
 
         {/* Section title */}
         <div className="flex items-center gap-2">
-          <Users className="h-5 w-5 text-muted-foreground" />
-          <h2 className="text-lg font-semibold">Por Cliente (Aguardando Retirada)</h2>
+          <Clock className="h-5 w-5 text-muted-foreground" />
+          <h2 className="text-lg font-semibold">Veículos Aguardando Entrada</h2>
         </div>
 
-        {/* Clients grid */}
-        {filteredClients.length > 0 ? (
+        {/* Vehicles awaiting pickup grid */}
+        {vehiclesAwaitingPickup.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredClients.map(client => (
-              <ClientCard
-                key={client.id}
-                client={client}
-                vehicles={vehicles?.filter(v => v.client_id === client.id) || []}
-              />
-            ))}
+            {vehiclesAwaitingPickup.map(vehicle => {
+              const client = clients?.find(c => c.id === vehicle.client_id);
+              return (
+                <Card 
+                  key={vehicle.id}
+                  className="shadow-card cursor-pointer transition-all hover:shadow-card-hover hover:-translate-y-0.5"
+                  onClick={() => navigate(`/clients/${vehicle.client_id}/vehicles/${vehicle.id}`)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-warning/10">
+                          <Car className="h-5 w-5 text-warning" />
+                        </div>
+                        <div>
+                          <p className="font-semibold">{vehicle.plate}</p>
+                          <p className="text-sm text-muted-foreground">{vehicle.model}</p>
+                        </div>
+                      </div>
+                      <Badge 
+                        variant="outline"
+                        className={cn("text-xs", badgeVariants[statusColors[vehicle.status]])}
+                      >
+                        {statusLabels[vehicle.status]}
+                      </Badge>
+                    </div>
+                    {client && (
+                      <div className="mt-3 pt-3 border-t">
+                        <p className="text-sm text-muted-foreground truncate">{client.name}</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center rounded-lg border border-dashed bg-muted/30 p-12">
-            <Users className="h-12 w-12 text-muted-foreground/50" />
-            <h3 className="mt-4 text-lg font-medium">Nenhum cliente com pendências</h3>
+            <Clock className="h-12 w-12 text-muted-foreground/50" />
+            <h3 className="mt-4 text-lg font-medium">Nenhum veículo aguardando entrada</h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              {searchTerm ? 'Nenhum resultado encontrado para a busca.' : 'Todos os veículos foram processados.'}
+              {searchTerm ? 'Nenhum resultado encontrado.' : 'Todos os veículos foram processados.'}
             </p>
           </div>
         )}
