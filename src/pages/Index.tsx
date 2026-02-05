@@ -15,7 +15,8 @@ import {
   Search,
   Plus,
   Loader2,
-  Wrench
+  Wrench,
+  Truck
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -186,12 +187,20 @@ export default function Dashboard() {
                           <p className="text-sm text-muted-foreground">{vehicle.model}</p>
                         </div>
                       </div>
-                      <Badge 
-                        variant="outline"
-                        className={cn("text-xs", badgeVariants[statusColors[vehicle.status]])}
-                      >
-                        {statusLabels[vehicle.status]}
-                      </Badge>
+                      <div className="flex flex-col items-end gap-1">
+                        <Badge 
+                          variant="outline"
+                          className={cn("text-xs", badgeVariants[statusColors[vehicle.status]])}
+                        >
+                          {statusLabels[vehicle.status]}
+                        </Badge>
+                        {vehicle.needs_tow && (
+                          <Badge variant="outline" className="text-xs bg-orange-100 text-orange-800 border-orange-300">
+                            <Truck className="h-3 w-3 mr-1" />
+                            Guincho
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                     {client && (
                       <div className="mt-3 pt-3 border-t">
@@ -241,12 +250,20 @@ export default function Dashboard() {
                           <p className="text-sm text-muted-foreground">{vehicle.model}</p>
                         </div>
                       </div>
-                      <Badge 
-                        variant="outline"
-                        className={cn("text-xs", badgeVariants[statusColors[vehicle.status]])}
-                      >
-                        {statusLabels[vehicle.status]}
-                      </Badge>
+                      <div className="flex flex-col items-end gap-1">
+                        <Badge 
+                          variant="outline"
+                          className={cn("text-xs", badgeVariants[statusColors[vehicle.status]])}
+                        >
+                          {statusLabels[vehicle.status]}
+                        </Badge>
+                        {vehicle.needs_tow && (
+                          <Badge variant="outline" className="text-xs bg-orange-100 text-orange-800 border-orange-300">
+                            <Truck className="h-3 w-3 mr-1" />
+                            Guincho
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                     {client && (
                       <div className="mt-3 pt-3 border-t">
