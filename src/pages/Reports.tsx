@@ -4,13 +4,16 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useClients } from '@/hooks/useClients';
 import { useVehicles } from '@/hooks/useVehicles';
 import { useUsers } from '@/hooks/useUsers';
 import { statusLabels } from '@/types';
-import { FileText, Download, Loader2 } from 'lucide-react';
-import { format } from 'date-fns';
+import { FileText, Download, Loader2, CalendarIcon } from 'lucide-react';
+import { format, isAfter, isBefore, startOfDay, endOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -21,13 +24,20 @@ export default function Reports() {
   const [selectedClient, setSelectedClient] = useState<string>('all');
   const [selectedUser, setSelectedUser] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [dateFrom, setDateFrom] = useState<Date | undefined>(undefined);
+  const [dateTo, setDateTo] = useState<Date | undefined>(undefined);
   const [isGenerating, setIsGenerating] = useState(false);
 
   const filteredVehicles = vehicles?.filter(v => {
     const matchesClient = selectedClient === 'all' || v.client_id === selectedClient;
     const matchesUser = selectedUser === 'all' || v.created_by === selectedUser;
     const matchesStatus = selectedStatus === 'all' || v.status === selectedStatus;
-    return matchesClient && matchesUser && matchesStatus;
+    
+    const vehicleDate = new Date(v.created_at);
+    const matchesDateFrom = !dateFrom || !isBefore(vehicleDate, startOfDay(dateFrom));
+    const matchesDateTo = !dateTo || !isAfter(vehicleDate, endOfDay(dateTo));
+    
+    return matchesClient && matchesUser && matchesStatus && matchesDateFrom && matchesDateTo;
   }) || [];
 
   const generatePDF = async () => {
@@ -50,6 +60,14 @@ export default function Reports() {
       if (selectedClient !== 'all') {
         const client = clients?.find(c => c.id === selectedClient);
         doc.text(`Cliente: ${client?.name || 'N/A'}`, pageWidth / 2, yOffset + 6, { align: 'center' });
+        yOffset += 6;
+      }
+      if (dateFrom || dateTo) {
+        const dateRange = [
+          dateFrom ? format(dateFrom, 'dd/MM/yyyy') : '...',
+          dateTo ? format(dateTo, 'dd/MM/yyyy') : '...',
+        ].join(' a ');
+        doc.text(`Período: ${dateRange}`, pageWidth / 2, yOffset + 6, { align: 'center' });
         yOffset += 6;
       }
       if (selectedUser !== 'all') {
@@ -196,7 +214,75 @@ export default function Reports() {
                     ))}
                   </SelectContent>
                 </Select>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Data inicial</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !dateFrom && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateFrom ? format(dateFrom, "dd/MM/yyyy", { locale: ptBR }) : "Selecionar data"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dateFrom}
+                      onSelect={setDateFrom}
+                      initialFocus
+                      locale={ptBR}
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
+
+              <div className="space-y-2">
+                <Label>Data final</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !dateTo && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateTo ? format(dateTo, "dd/MM/yyyy", { locale: ptBR }) : "Selecionar data"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dateTo}
+                      onSelect={setDateTo}
+                      initialFocus
+                      locale={ptBR}
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+
+            {(dateFrom || dateTo) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => { setDateFrom(undefined); setDateTo(undefined); }}
+              >
+                Limpar filtro de data
+              </Button>
+            )}
 
               <div className="space-y-2">
                 <Label>Filtrar por status</Label>
