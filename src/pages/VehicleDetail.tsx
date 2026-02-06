@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import AppLayout from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useVehicle, useVehiclePhotos, useUpdateVehicle, useUpdateVehicleStatus, useAddVehiclePhoto } from '@/hooks/useVehicles';
+import { PhotoLightbox } from '@/components/ui/photo-lightbox';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { statusLabels, statusColors, VehicleStatus } from '@/types';
@@ -55,6 +56,7 @@ export default function VehicleDetail() {
   const [isUploading, setIsUploading] = useState(false);
   const [isManualCheckin, setIsManualCheckin] = useState(false);
   const [editForm, setEditForm] = useState({ plate: '', model: '' });
+  const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -331,11 +333,15 @@ export default function VehicleDetail() {
               {checkinPhotos.length > 0 ? (
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {checkinPhotos.map(photo => (
-                    <div key={photo.id} className="relative group">
+                    <div 
+                      key={photo.id} 
+                      className="relative group cursor-pointer"
+                      onClick={() => setLightboxPhoto(photo.photo_url)}
+                    >
                       <img
                         src={photo.photo_url}
                         alt="Check-in"
-                        className="w-full h-48 object-cover rounded-lg"
+                        className="w-full h-48 object-cover rounded-lg transition-opacity group-hover:opacity-90"
                       />
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 rounded-b-lg">
                         <p className="text-white text-sm">
@@ -360,11 +366,15 @@ export default function VehicleDetail() {
               {checkoutPhotos.length > 0 ? (
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {checkoutPhotos.map(photo => (
-                    <div key={photo.id} className="relative group">
+                    <div 
+                      key={photo.id} 
+                      className="relative group cursor-pointer"
+                      onClick={() => setLightboxPhoto(photo.photo_url)}
+                    >
                       <img
                         src={photo.photo_url}
                         alt="Check-out"
-                        className="w-full h-48 object-cover rounded-lg"
+                        className="w-full h-48 object-cover rounded-lg transition-opacity group-hover:opacity-90"
                       />
                       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 rounded-b-lg">
                         <p className="text-white text-sm">
@@ -380,6 +390,14 @@ export default function VehicleDetail() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Photo Lightbox */}
+        <PhotoLightbox
+          open={!!lightboxPhoto}
+          onOpenChange={(open) => !open && setLightboxPhoto(null)}
+          src={lightboxPhoto || ''}
+          alt="Foto do veículo"
+        />
 
         {/* Edit Dialog */}
         <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
