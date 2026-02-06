@@ -77,6 +77,31 @@ export default function Reports() {
         headStyles: { fillColor: [26, 86, 219] },
       });
 
+      // Per-user summary
+      const userVehicleCounts: Record<string, number> = {};
+      filteredVehicles.forEach(v => {
+        const userId = v.created_by || 'unknown';
+        userVehicleCounts[userId] = (userVehicleCounts[userId] || 0) + 1;
+      });
+
+      const userSummaryData = Object.entries(userVehicleCounts).map(([userId, count]) => {
+        const user = users?.find(u => u.id === userId);
+        return [user?.full_name || 'Não identificado', count];
+      });
+
+      if (userSummaryData.length > 0) {
+        doc.setFontSize(12);
+        doc.text('Veículos por Usuário', 14, (doc as any).lastAutoTable.finalY + 15);
+
+        autoTable(doc, {
+          startY: (doc as any).lastAutoTable.finalY + 20,
+          head: [['Usuário', 'Quantidade']],
+          body: userSummaryData,
+          theme: 'grid',
+          headStyles: { fillColor: [26, 86, 219] },
+        });
+      }
+
       // Vehicles table
       doc.setFontSize(12);
       doc.text('Veículos', 14, (doc as any).lastAutoTable.finalY + 15);
