@@ -20,12 +20,14 @@ export default function Reports() {
   const { data: users } = useUsers();
   const [selectedClient, setSelectedClient] = useState<string>('all');
   const [selectedUser, setSelectedUser] = useState<string>('all');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [isGenerating, setIsGenerating] = useState(false);
 
   const filteredVehicles = vehicles?.filter(v => {
     const matchesClient = selectedClient === 'all' || v.client_id === selectedClient;
     const matchesUser = selectedUser === 'all' || v.created_by === selectedUser;
-    return matchesClient && matchesUser;
+    const matchesStatus = selectedStatus === 'all' || v.status === selectedStatus;
+    return matchesClient && matchesUser && matchesStatus;
   }) || [];
 
   const generatePDF = async () => {
@@ -161,7 +163,7 @@ export default function Reports() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-2">
                 <Label>Filtrar por cliente</Label>
                 <Select value={selectedClient} onValueChange={setSelectedClient}>
@@ -192,6 +194,22 @@ export default function Reports() {
                         {user.full_name}
                       </SelectItem>
                     ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Filtrar por status</Label>
+                <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todos os status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os status</SelectItem>
+                    <SelectItem value="aguardando_entrada">Aguardando Entrada</SelectItem>
+                    <SelectItem value="check_in">Em Atendimento</SelectItem>
+                    <SelectItem value="check_out">Finalizado</SelectItem>
+                    <SelectItem value="cancelado">Cancelado</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
