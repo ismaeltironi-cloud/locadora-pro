@@ -5,8 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCreateClient } from '@/hooks/useClients';
 import { useToast } from '@/hooks/use-toast';
+import { TaxpayerType, taxpayerTypeLabels } from '@/types';
 import { ArrowLeft, Loader2, Building2, Search } from 'lucide-react';
 
 interface CNPJData {
@@ -34,6 +36,10 @@ export default function ClientForm() {
     address: '',
     phone: '',
     email: '',
+    trade_name: '',
+    taxpayer_type: 'nao_contribuinte' as TaxpayerType,
+    municipal_registration: '',
+    state_registration: '',
   });
   const [isSearchingCNPJ, setIsSearchingCNPJ] = useState(false);
 
@@ -47,6 +53,10 @@ export default function ClientForm() {
         address: formData.address || null,
         phone: formData.phone || null,
         email: formData.email || null,
+        trade_name: formData.trade_name || null,
+        taxpayer_type: formData.taxpayer_type,
+        municipal_registration: formData.municipal_registration || null,
+        state_registration: formData.state_registration || null,
       });
       navigate('/clients');
     } catch (error) {
@@ -99,7 +109,6 @@ export default function ClientForm() {
 
       const data: CNPJData = await response.json();
       
-      // Build address string
       const addressParts = [
         data.logradouro,
         data.numero,
@@ -110,7 +119,6 @@ export default function ClientForm() {
         data.cep,
       ].filter(Boolean);
       
-      // Format phone
       let phone = '';
       if (data.ddd_telefone_1) {
         const phoneDigits = data.ddd_telefone_1.replace(/\D/g, '');
@@ -119,7 +127,8 @@ export default function ClientForm() {
 
       setFormData(prev => ({
         ...prev,
-        name: data.nome_fantasia || data.razao_social || prev.name,
+        name: data.razao_social || prev.name,
+        trade_name: data.nome_fantasia || prev.trade_name,
         address: addressParts.join(', ') || prev.address,
         phone: phone || prev.phone,
         email: data.email?.toLowerCase() || prev.email,
@@ -145,7 +154,6 @@ export default function ClientForm() {
     const formattedCNPJ = formatCNPJ(value);
     setFormData({ ...formData, cnpj: formattedCNPJ });
     
-    // Auto search when CNPJ is complete (18 chars with formatting)
     if (formattedCNPJ.length === 18) {
       searchCNPJ(formattedCNPJ);
     }
@@ -175,6 +183,7 @@ export default function ClientForm() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
+                {/* CNPJ */}
                 <div className="space-y-2">
                   <Label htmlFor="cnpj">CNPJ *</Label>
                   <div className="relative">
@@ -208,6 +217,7 @@ export default function ClientForm() {
                   </p>
                 </div>
 
+                {/* Telefone */}
                 <div className="space-y-2">
                   <Label htmlFor="phone">Telefone</Label>
                   <Input
@@ -218,18 +228,51 @@ export default function ClientForm() {
                   />
                 </div>
 
+                {/* Nome (Razão Social) */}
                 <div className="space-y-2 sm:col-span-2">
-                  <Label htmlFor="name">Nome da Empresa *</Label>
+                  <Label htmlFor="name">Nome (Razão Social) *</Label>
                   <Input
                     id="name"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="Nome da empresa"
+                    placeholder="Razão social da empresa"
                     required
                   />
                 </div>
 
+                {/* Nome Fantasia */}
                 <div className="space-y-2 sm:col-span-2">
+                  <Label htmlFor="trade_name">Nome Fantasia</Label>
+                  <Input
+                    id="trade_name"
+                    value={formData.trade_name}
+                    onChange={(e) => setFormData({ ...formData, trade_name: e.target.value })}
+                    placeholder="Nome fantasia da empresa"
+                  />
+                </div>
+
+                {/* Tipo de Contribuinte */}
+                <div className="space-y-2">
+                  <Label htmlFor="taxpayer_type">Tipo de Contribuinte *</Label>
+                  <Select
+                    value={formData.taxpayer_type}
+                    onValueChange={(value) => setFormData({ ...formData, taxpayer_type: value as TaxpayerType })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(taxpayerTypeLabels).map(([value, label]) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Email */}
+                <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
@@ -240,6 +283,29 @@ export default function ClientForm() {
                   />
                 </div>
 
+                {/* Inscrição Municipal */}
+                <div className="space-y-2">
+                  <Label htmlFor="municipal_registration">Inscrição Municipal</Label>
+                  <Input
+                    id="municipal_registration"
+                    value={formData.municipal_registration}
+                    onChange={(e) => setFormData({ ...formData, municipal_registration: e.target.value })}
+                    placeholder="Inscrição municipal"
+                  />
+                </div>
+
+                {/* Inscrição Estadual */}
+                <div className="space-y-2">
+                  <Label htmlFor="state_registration">Inscrição Estadual</Label>
+                  <Input
+                    id="state_registration"
+                    value={formData.state_registration}
+                    onChange={(e) => setFormData({ ...formData, state_registration: e.target.value })}
+                    placeholder="Inscrição estadual"
+                  />
+                </div>
+
+                {/* Endereço */}
                 <div className="space-y-2 sm:col-span-2">
                   <Label htmlFor="address">Endereço</Label>
                   <Input
