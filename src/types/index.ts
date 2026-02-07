@@ -21,6 +21,14 @@ export interface UserRole {
   created_at: string;
 }
 
+export type TaxpayerType = 'contribuinte_icms' | 'contribuinte_isento' | 'nao_contribuinte';
+
+export const taxpayerTypeLabels: Record<TaxpayerType, string> = {
+  contribuinte_icms: 'Contribuinte ICMS',
+  contribuinte_isento: 'Contribuinte Isento',
+  nao_contribuinte: 'Não Contribuinte',
+};
+
 export interface Client {
   id: string;
   name: string;
@@ -28,6 +36,10 @@ export interface Client {
   address: string | null;
   phone: string | null;
   email: string | null;
+  trade_name: string | null;
+  taxpayer_type: TaxpayerType | null;
+  municipal_registration: string | null;
+  state_registration: string | null;
   created_at: string;
   updated_at: string;
 }
