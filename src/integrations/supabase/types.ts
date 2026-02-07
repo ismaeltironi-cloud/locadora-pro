@@ -17,13 +17,19 @@ export type Database = {
       clients: {
         Row: {
           address: string | null
-          cnpj: string
+          birth_date: string | null
+          cnpj: string | null
+          cpf: string | null
           created_at: string | null
           email: string | null
+          gender: string | null
           id: string
+          marital_status: string | null
           municipal_registration: string | null
           name: string
+          person_type: string
           phone: string | null
+          rg: string | null
           state_registration: string | null
           taxpayer_type: string | null
           trade_name: string | null
@@ -31,13 +37,19 @@ export type Database = {
         }
         Insert: {
           address?: string | null
-          cnpj: string
+          birth_date?: string | null
+          cnpj?: string | null
+          cpf?: string | null
           created_at?: string | null
           email?: string | null
+          gender?: string | null
           id?: string
+          marital_status?: string | null
           municipal_registration?: string | null
           name: string
+          person_type?: string
           phone?: string | null
+          rg?: string | null
           state_registration?: string | null
           taxpayer_type?: string | null
           trade_name?: string | null
@@ -45,13 +57,19 @@ export type Database = {
         }
         Update: {
           address?: string | null
-          cnpj?: string
+          birth_date?: string | null
+          cnpj?: string | null
+          cpf?: string | null
           created_at?: string | null
           email?: string | null
+          gender?: string | null
           id?: string
+          marital_status?: string | null
           municipal_registration?: string | null
           name?: string
+          person_type?: string
           phone?: string | null
+          rg?: string | null
           state_registration?: string | null
           taxpayer_type?: string | null
           trade_name?: string | null

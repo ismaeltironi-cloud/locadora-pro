@@ -22,6 +22,9 @@ export interface UserRole {
 }
 
 export type TaxpayerType = 'contribuinte_icms' | 'contribuinte_isento' | 'nao_contribuinte';
+export type PersonType = 'fisica' | 'juridica';
+export type Gender = 'masculino' | 'feminino';
+export type MaritalStatus = 'solteiro' | 'casado' | 'divorciado' | 'viuvo' | 'uniao_estavel';
 
 export const taxpayerTypeLabels: Record<TaxpayerType, string> = {
   contribuinte_icms: 'Contribuinte ICMS',
@@ -29,10 +32,23 @@ export const taxpayerTypeLabels: Record<TaxpayerType, string> = {
   nao_contribuinte: 'Não Contribuinte',
 };
 
+export const genderLabels: Record<Gender, string> = {
+  masculino: 'Masculino',
+  feminino: 'Feminino',
+};
+
+export const maritalStatusLabels: Record<MaritalStatus, string> = {
+  solteiro: 'Solteiro(a)',
+  casado: 'Casado(a)',
+  divorciado: 'Divorciado(a)',
+  viuvo: 'Viúvo(a)',
+  uniao_estavel: 'União Estável',
+};
+
 export interface Client {
   id: string;
   name: string;
-  cnpj: string;
+  cnpj: string | null;
   address: string | null;
   phone: string | null;
   email: string | null;
@@ -40,6 +56,12 @@ export interface Client {
   taxpayer_type: TaxpayerType | null;
   municipal_registration: string | null;
   state_registration: string | null;
+  person_type: PersonType;
+  cpf: string | null;
+  rg: string | null;
+  birth_date: string | null;
+  gender: Gender | null;
+  marital_status: MaritalStatus | null;
   created_at: string;
   updated_at: string;
 }
