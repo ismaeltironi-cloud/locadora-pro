@@ -92,25 +92,12 @@ export default function Auth() {
     setIsLoading(true);
 
     try {
-      // Lookup email by username
-      const { data: profile, error: lookupError } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('username', username.toLowerCase().trim())
-        .maybeSingle();
+      // Lookup email by username via secure RPC
+      const { data, error: lookupError } = await supabase.rpc('get_email_for_login', {
+        _username: username.toLowerCase().trim(),
+      });
 
-      if (lookupError) {
-        console.error('Lookup error:', lookupError);
-        toast({
-          variant: 'destructive',
-          title: 'Erro ao entrar',
-          description: 'Erro ao buscar usuário',
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      if (!profile) {
+      if (lookupError || !data || data.length === 0) {
         toast({
           variant: 'destructive',
           title: 'Erro ao entrar',
@@ -122,7 +109,7 @@ export default function Auth() {
 
       // Sign in with the email
       const { error } = await supabase.auth.signInWithPassword({
-        email: profile.email,
+        email: data[0].email,
         password,
       });
 
