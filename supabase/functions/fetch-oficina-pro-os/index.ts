@@ -36,14 +36,9 @@ serve(async (req) => {
       });
     }
 
-    // Get plates from request
-    const { plates } = await req.json();
-    if (!plates || !Array.isArray(plates) || plates.length === 0) {
-      return new Response(JSON.stringify({ error: 'plates array required' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    // Get params from request
+    const body = await req.json();
+    const { plates, status } = body;
 
     // Connect to Oficina Pro
     const oficinProUrl = Deno.env.get('OFICINA_PRO_URL');
@@ -58,11 +53,27 @@ serve(async (req) => {
 
     const oficinaPro = createClient(oficinProUrl, oficinProKey);
 
-    // Query service_orders by plates
-    const { data: orders, error: ordersError } = await oficinaPro
-      .from('service_orders')
-      .select('*')
-      .in('veiculo_placa', plates.map((p: string) => p.toUpperCase()));
+    let query = oficinaPro.from('service_orders').select('*');
+
+    // Filter by status if provided
+    if (status) {
+      query = query.eq('status', status);
+    }
+
+    // Filter by plates if provided
+    if (plates && Array.isArray(plates) && plates.length > 0) {
+      query = query.in('veiculo_placa', plates.map((p: string) => p.toUpperCase()));
+    }
+
+    // If neither filter provided, return error
+    if (!status && (!plates || !Array.isArray(plates) || plates.length === 0)) {
+      return new Response(JSON.stringify({ error: 'status or plates filter required' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const { data: orders, error: ordersError } = await query;
 
     if (ordersError) {
       console.error('Error fetching OS from Oficina Pro:', ordersError);
