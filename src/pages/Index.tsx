@@ -52,8 +52,9 @@ export default function Dashboard() {
     if (!searchTerm) return aguardandoOS;
     const lower = searchTerm.toLowerCase();
     return aguardandoOS.filter(os =>
-      os.veiculo_placa?.toLowerCase().includes(lower) ||
-      os.cliente_nome?.toLowerCase().includes(lower) ||
+      os.vehicle?.placa?.toLowerCase().includes(lower) ||
+      os.vehicle?.modelo?.toLowerCase().includes(lower) ||
+      os.client?.nome?.toLowerCase().includes(lower) ||
       os.numero?.toLowerCase().includes(lower)
     );
   }, [aguardandoOS, searchTerm]);
@@ -174,37 +175,46 @@ export default function Dashboard() {
         {/* OS awaiting entry from Oficina Pro */}
         {filteredAguardandoOS.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredAguardandoOS.map((os, idx) => (
-              <Card 
-                key={os.id || idx}
-                className="shadow-card transition-all hover:shadow-card-hover hover:-translate-y-0.5"
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-warning/10">
-                        <FileText className="h-5 w-5 text-warning" />
+            {filteredAguardandoOS.map((os, idx) => {
+              const vehicle = os.vehicle;
+              const client = os.client;
+              return (
+                <Card 
+                  key={os.id || idx}
+                  className="shadow-card cursor-pointer transition-all hover:shadow-card-hover hover:-translate-y-0.5"
+                  onClick={() => navigate(`/os/${os.id}`)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-warning/10">
+                          <Car className="h-5 w-5 text-warning" />
+                        </div>
+                        <div>
+                          <p className="font-semibold">{vehicle?.placa || '—'}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {[vehicle?.marca, vehicle?.modelo].filter(Boolean).join(' ') || '—'}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-semibold">OS {os.numero || '—'}</p>
-                        <p className="text-sm text-muted-foreground">{os.veiculo_placa || '—'}</p>
+                      <Badge 
+                        variant="outline"
+                        className={cn("text-xs", badgeVariants['warning'])}
+                      >
+                        OS {os.numero || '—'}
+                      </Badge>
+                    </div>
+                    {client && (
+                      <div className="mt-3 pt-3 border-t">
+                        <p className="text-sm text-muted-foreground truncate">
+                          {client.nome || '—'}
+                        </p>
                       </div>
-                    </div>
-                    <Badge 
-                      variant="outline"
-                      className={cn("text-xs", badgeVariants['warning'])}
-                    >
-                      {os.status || 'Aguardando Entrada'}
-                    </Badge>
-                  </div>
-                  {os.cliente_nome && (
-                    <div className="mt-3 pt-3 border-t">
-                      <p className="text-sm text-muted-foreground truncate">{os.cliente_nome}</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center rounded-lg border border-dashed bg-muted/30 p-12">
