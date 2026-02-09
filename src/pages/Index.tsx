@@ -31,7 +31,7 @@ export default function Dashboard() {
   const { canEdit } = useAuth();
   const { data: clients, isLoading: clientsLoading } = useClients();
   const { data: vehicles, isLoading: vehiclesLoading } = useVehicles();
-  const { data: aguardandoOS, isLoading: osLoading } = useOficinaProOS({ status: 'Aguardando Entrada' });
+  const { data: aguardandoOS, isLoading: osLoading } = useOficinaProOS({ status: 'aguardando_entrada' });
   const [searchTerm, setSearchTerm] = useState('');
 
   const isLoading = clientsLoading || vehiclesLoading || osLoading;
