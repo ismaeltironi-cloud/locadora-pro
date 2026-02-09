@@ -2,3 +2,6 @@ project_id = "hwbvndmmhuelpssqmogg"
 
 [functions.process-service-request]
 verify_jwt = false
+
+[functions.fetch-oficina-pro-os]
+verify_jwt = false
