@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppLayout from '@/components/layout/AppLayout';
 import StatCard from '@/components/dashboard/StatCard';
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useClients } from '@/hooks/useClients';
 import { useVehicles } from '@/hooks/useVehicles';
 import { useAuth } from '@/contexts/AuthContext';
+import { useOficinaProOS } from '@/hooks/useOficinaProOS';
 import { 
   Car, 
   Clock, 
@@ -17,7 +18,8 @@ import {
   Loader2,
   Wrench,
   Truck,
-  PlusCircle
+  PlusCircle,
+  FileText
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -32,6 +34,13 @@ export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState('');
 
   const isLoading = clientsLoading || vehiclesLoading;
+
+  // Get plates of vehicles awaiting entry for Oficina Pro lookup
+  const awaitingPlates = useMemo(() => 
+    vehicles?.filter(v => v.status === 'aguardando_entrada').map(v => v.plate) || [],
+    [vehicles]
+  );
+  const { data: osByPlate } = useOficinaProOS(awaitingPlates);
 
   // Normalize CNPJ for search (remove formatting)
   const normalizeCNPJ = (value: string) => value.replace(/\D/g, '');
@@ -179,6 +188,7 @@ export default function Dashboard() {
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {vehiclesAwaitingPickup.map(vehicle => {
               const client = clients?.find(c => c.id === vehicle.client_id);
+              const vehicleOS = osByPlate?.[vehicle.plate.toUpperCase()] || [];
               return (
                 <Card 
                   key={vehicle.id}
@@ -214,6 +224,23 @@ export default function Dashboard() {
                     {client && (
                       <div className="mt-3 pt-3 border-t">
                         <p className="text-sm text-muted-foreground truncate">{client.name}</p>
+                      </div>
+                    )}
+                    {vehicleOS.length > 0 && (
+                      <div className="mt-3 pt-3 border-t space-y-2">
+                        {vehicleOS.map((os, idx) => (
+                          <div key={os.id || idx} className="flex items-center gap-2">
+                            <FileText className="h-4 w-4 text-primary" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">
+                                OS {os.numero || '—'}
+                              </p>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {os.cliente_nome || '—'} • {os.status || '—'}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </CardContent>
