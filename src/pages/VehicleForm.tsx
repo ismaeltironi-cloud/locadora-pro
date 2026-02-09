@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useClient, useClients } from '@/hooks/useClients';
 import { useCreateVehicle, useVehicleByPlate } from '@/hooks/useVehicles';
 import { useAuth } from '@/contexts/AuthContext';
-import { ArrowLeft, Loader2, Car, Info } from 'lucide-react';
+import { Loader2, Info, X } from 'lucide-react';
 
 export default function VehicleForm() {
   const { clientId } = useParams<{ clientId: string }>();
@@ -64,13 +64,9 @@ export default function VehicleForm() {
 
   const isFromDashboard = !clientId;
   const selectedClientId = formData.selected_client_id;
-  const selectedClient = isFromDashboard 
-    ? clients?.find(c => c.id === selectedClientId)
-    : client;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!selectedClientId) return;
 
     try {
@@ -102,6 +98,14 @@ export default function VehicleForm() {
     return value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 7);
   };
 
+  const handleClose = () => {
+    if (isFromDashboard) {
+      navigate('/');
+    } else {
+      navigate(`/clients/${clientId}`);
+    }
+  };
+
   const isLoading = clientId ? clientLoading : clientsLoading;
 
   if (isLoading) {
@@ -116,62 +120,27 @@ export default function VehicleForm() {
 
   return (
     <AppLayout>
-      <div className="p-6">
-        <Button 
-          variant="ghost" 
-          className="mb-4"
-          onClick={() => isFromDashboard ? navigate('/') : navigate(`/clients/${clientId}`)}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Voltar
-        </Button>
-
-        <Card className="max-w-2xl mx-auto shadow-card">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                <Car className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <CardTitle>Novo Veículo</CardTitle>
-                {selectedClient && (
-                  <p className="text-sm text-muted-foreground">Cliente: {selectedClient.name}</p>
-                )}
-              </div>
-            </div>
+      <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] p-4">
+        <Card className="w-full max-w-lg shadow-card">
+          <CardHeader className="flex flex-row items-center justify-between pb-4">
+            <CardTitle className="text-lg font-bold">Novo Veículo</CardTitle>
+            <Button variant="ghost" size="icon" onClick={handleClose} className="h-8 w-8">
+              <X className="h-4 w-4" />
+            </Button>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              {isFromDashboard && (
-                <div className="space-y-2">
-                  <Label htmlFor="client">Cliente *</Label>
-                  <Select
-                    value={formData.selected_client_id}
-                    onValueChange={(value) => setFormData({ ...formData, selected_client_id: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um cliente" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {clients?.map((c) => (
-                        <SelectItem key={c.id} value={c.id}>
-                          {c.name} - {c.cnpj}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <Label htmlFor="plate">Placa *</Label>
+              {/* Placa - full width */}
+              <div className="space-y-1.5">
+                <Label htmlFor="plate" className="font-semibold">Placa *</Label>
                 <Input
                   id="plate"
                   value={formData.plate}
                   onChange={(e) => setFormData({ ...formData, plate: formatPlate(e.target.value) })}
-                  placeholder="ABC1234"
+                  placeholder=""
                   required
                   maxLength={7}
+                  className="ring-2 ring-primary/50 focus-visible:ring-primary"
                 />
                 {searchingVehicle && debouncedPlate.length >= 7 && (
                   <p className="text-sm text-muted-foreground">Buscando veículo...</p>
@@ -182,101 +151,109 @@ export default function VehicleForm() {
                 <Alert>
                   <Info className="h-4 w-4" />
                   <AlertDescription>
-                    Veículo encontrado na base de dados. Os campos foram preenchidos automaticamente.
+                    Veículo encontrado. Campos preenchidos automaticamente.
                   </AlertDescription>
                 </Alert>
               )}
 
-              <div className="space-y-2">
-                <Label htmlFor="brand">Marca</Label>
-                <Input
-                  id="brand"
-                  value={formData.brand}
-                  onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                  placeholder="Ex: Fiat"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="model">Modelo *</Label>
-                <Input
-                  id="model"
-                  value={formData.model}
-                  onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-                  placeholder="Ex: Uno"
-                  required
-                />
-              </div>
-
+              {/* Marca + Modelo - 2 columns */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="year">Ano</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="brand" className="font-semibold">Marca</Label>
+                  <Input
+                    id="brand"
+                    value={formData.brand}
+                    onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="model" className="font-semibold">Modelo *</Label>
+                  <Input
+                    id="model"
+                    value={formData.model}
+                    onChange={(e) => setFormData({ ...formData, model: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Ano + Cor + KM - 3 columns */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="year" className="font-semibold">Ano</Label>
                   <Input
                     id="year"
                     type="number"
                     value={formData.year}
                     onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                    placeholder="Ex: 2020"
                   />
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="color">Cor</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="color" className="font-semibold">Cor</Label>
                   <Input
                     id="color"
                     value={formData.color}
                     onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                    placeholder="Ex: Prata"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="km" className="font-semibold">KM</Label>
+                  <Input
+                    id="km"
+                    type="number"
+                    value={formData.km}
+                    onChange={(e) => setFormData({ ...formData, km: e.target.value })}
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="km">KM</Label>
-                <Input
-                  id="km"
-                  type="number"
-                  value={formData.km}
-                  onChange={(e) => setFormData({ ...formData, km: e.target.value })}
-                  placeholder="Ex: 50000"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="chassis">Chassi</Label>
+              {/* Chassi - full width */}
+              <div className="space-y-1.5">
+                <Label htmlFor="chassis" className="font-semibold">Chassi</Label>
                 <Input
                   id="chassis"
                   value={formData.chassis}
                   onChange={(e) => setFormData({ ...formData, chassis: e.target.value.toUpperCase() })}
-                  placeholder="Ex: 9BWZZZ377VT004251"
+                  placeholder="EX: 9BWZZZ377VT004251"
                   maxLength={17}
                 />
               </div>
 
-              <div className="flex gap-3 pt-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => isFromDashboard ? navigate('/') : navigate(`/clients/${clientId}`)}
-                  className="flex-1"
+              {/* Cliente - always visible */}
+              <div className="space-y-1.5">
+                <Label htmlFor="client" className="font-semibold">Cliente</Label>
+                <Select
+                  value={formData.selected_client_id}
+                  onValueChange={(value) => setFormData({ ...formData, selected_client_id: value })}
                 >
-                  Cancelar
-                </Button>
-                <Button 
-                  type="submit" 
-                  className="flex-1"
-                  disabled={createVehicle.isPending || (isFromDashboard && !selectedClientId)}
-                >
-                  {createVehicle.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Salvando...
-                    </>
-                  ) : (
-                    'Cadastrar Veículo'
-                  )}
-                </Button>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecionar cliente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {clients?.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+
+              {/* Salvar button */}
+              <Button 
+                type="submit" 
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-3"
+                disabled={createVehicle.isPending || !selectedClientId}
+              >
+                {createVehicle.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Salvando...
+                  </>
+                ) : (
+                  'Salvar'
+                )}
+              </Button>
             </form>
           </CardContent>
         </Card>
