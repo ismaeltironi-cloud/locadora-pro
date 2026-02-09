@@ -70,7 +70,11 @@ export interface Vehicle {
   id: string;
   client_id: string;
   plate: string;
+  brand: string | null;
   model: string;
+  year: number | null;
+  color: string | null;
+  chassis: string | null;
   status: VehicleStatus;
   defect_description: string | null;
   checkin_at: string | null;

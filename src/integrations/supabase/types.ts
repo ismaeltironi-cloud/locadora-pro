@@ -177,9 +177,12 @@ export type Database = {
       }
       vehicles: {
         Row: {
+          brand: string | null
+          chassis: string | null
           checkin_at: string | null
           checkout_at: string | null
           client_id: string
+          color: string | null
           created_at: string | null
           created_by: string | null
           defect_description: string | null
@@ -190,11 +193,15 @@ export type Database = {
           plate: string
           status: Database["public"]["Enums"]["vehicle_status"] | null
           updated_at: string | null
+          year: number | null
         }
         Insert: {
+          brand?: string | null
+          chassis?: string | null
           checkin_at?: string | null
           checkout_at?: string | null
           client_id: string
+          color?: string | null
           created_at?: string | null
           created_by?: string | null
           defect_description?: string | null
@@ -205,11 +212,15 @@ export type Database = {
           plate: string
           status?: Database["public"]["Enums"]["vehicle_status"] | null
           updated_at?: string | null
+          year?: number | null
         }
         Update: {
+          brand?: string | null
+          chassis?: string | null
           checkin_at?: string | null
           checkout_at?: string | null
           client_id?: string
+          color?: string | null
           created_at?: string | null
           created_by?: string | null
           defect_description?: string | null
@@ -220,6 +231,7 @@ export type Database = {
           plate?: string
           status?: Database["public"]["Enums"]["vehicle_status"] | null
           updated_at?: string | null
+          year?: number | null
         }
         Relationships: [
           {
