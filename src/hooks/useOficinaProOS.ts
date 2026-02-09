@@ -10,15 +10,25 @@ export interface OficinaProOS {
   [key: string]: unknown;
 }
 
-export function useOficinaProOS(plates: string[]) {
-  return useQuery({
-    queryKey: ['oficina-pro-os', plates],
-    queryFn: async () => {
-      if (!plates.length) return {};
+interface UseOficinaProOSOptions {
+  plates?: string[];
+  status?: string;
+}
 
+export function useOficinaProOS(options: UseOficinaProOSOptions = {}) {
+  const { plates, status } = options;
+  const enabled = !!(status || (plates && plates.length > 0));
+
+  return useQuery({
+    queryKey: ['oficina-pro-os', { plates, status }],
+    queryFn: async () => {
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData?.session?.access_token;
       if (!token) throw new Error('Not authenticated');
+
+      const body: Record<string, unknown> = {};
+      if (status) body.status = status;
+      if (plates && plates.length > 0) body.plates = plates;
 
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fetch-oficina-pro-os`,
@@ -29,7 +39,7 @@ export function useOficinaProOS(plates: string[]) {
             'Authorization': `Bearer ${token}`,
             'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
-          body: JSON.stringify({ plates }),
+          body: JSON.stringify(body),
         }
       );
 
@@ -39,19 +49,9 @@ export function useOficinaProOS(plates: string[]) {
       }
 
       const { orders } = await response.json();
-
-      // Index by plate for easy lookup
-      const byPlate: Record<string, OficinaProOS[]> = {};
-      for (const order of orders) {
-        const plate = order.veiculo_placa?.toUpperCase();
-        if (plate) {
-          if (!byPlate[plate]) byPlate[plate] = [];
-          byPlate[plate].push(order);
-        }
-      }
-      return byPlate;
+      return orders as OficinaProOS[];
     },
-    enabled: plates.length > 0,
+    enabled,
     staleTime: 60_000,
   });
 }

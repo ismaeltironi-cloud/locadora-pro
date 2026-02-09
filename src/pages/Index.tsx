@@ -31,44 +31,32 @@ export default function Dashboard() {
   const { canEdit } = useAuth();
   const { data: clients, isLoading: clientsLoading } = useClients();
   const { data: vehicles, isLoading: vehiclesLoading } = useVehicles();
+  const { data: aguardandoOS, isLoading: osLoading } = useOficinaProOS({ status: 'Aguardando Entrada' });
   const [searchTerm, setSearchTerm] = useState('');
 
-  const isLoading = clientsLoading || vehiclesLoading;
-
-  // Get plates of vehicles awaiting entry for Oficina Pro lookup
-  const awaitingPlates = useMemo(() => 
-    vehicles?.filter(v => v.status === 'aguardando_entrada').map(v => v.plate) || [],
-    [vehicles]
-  );
-  const { data: osByPlate } = useOficinaProOS(awaitingPlates);
+  const isLoading = clientsLoading || vehiclesLoading || osLoading;
 
   // Normalize CNPJ for search (remove formatting)
   const normalizeCNPJ = (value: string) => value.replace(/\D/g, '');
 
   // Calculate stats
   const totalVehicles = vehicles?.length || 0;
-  const aguardandoEntrada = vehicles?.filter(v => v.status === 'aguardando_entrada').length || 0;
+  const aguardandoEntrada = aguardandoOS?.length || 0;
   const checkInCount = vehicles?.filter(v => v.status === 'check_in').length || 0;
   const checkOutCount = vehicles?.filter(v => v.status === 'check_out').length || 0;
   const cancelledCount = vehicles?.filter(v => v.status === 'cancelado').length || 0;
 
-  // Filter vehicles awaiting pickup (aguardando_entrada)
-  const vehiclesAwaitingPickup = vehicles?.filter(v => {
-    const matchesStatus = v.status === 'aguardando_entrada';
-    
-    if (!searchTerm) return matchesStatus;
-    
-    const normalizedSearch = normalizeCNPJ(searchTerm);
-    const client = clients?.find(c => c.id === v.client_id);
-    const normalizedCNPJ = client ? normalizeCNPJ(client.cnpj) : '';
-    
-    return matchesStatus && (
-      v.plate.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      v.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      normalizedCNPJ.includes(normalizedSearch)
+  // Filter OS from Oficina Pro
+  const filteredAguardandoOS = useMemo(() => {
+    if (!aguardandoOS) return [];
+    if (!searchTerm) return aguardandoOS;
+    const lower = searchTerm.toLowerCase();
+    return aguardandoOS.filter(os =>
+      os.veiculo_placa?.toLowerCase().includes(lower) ||
+      os.cliente_nome?.toLowerCase().includes(lower) ||
+      os.numero?.toLowerCase().includes(lower)
     );
-  }) || [];
+  }, [aguardandoOS, searchTerm]);
 
   // Get vehicles in service (check_in status)
   const vehiclesInService = vehicles?.filter(v => {
@@ -183,70 +171,40 @@ export default function Dashboard() {
           <h2 className="text-lg font-semibold">Veículos Aguardando Entrada</h2>
         </div>
 
-        {/* Vehicles awaiting pickup grid */}
-        {vehiclesAwaitingPickup.length > 0 ? (
+        {/* OS awaiting entry from Oficina Pro */}
+        {filteredAguardandoOS.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {vehiclesAwaitingPickup.map(vehicle => {
-              const client = clients?.find(c => c.id === vehicle.client_id);
-              const vehicleOS = osByPlate?.[vehicle.plate.toUpperCase()] || [];
-              return (
-                <Card 
-                  key={vehicle.id}
-                  className="shadow-card cursor-pointer transition-all hover:shadow-card-hover hover:-translate-y-0.5"
-                  onClick={() => navigate(`/clients/${vehicle.client_id}/vehicles/${vehicle.id}`)}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-warning/10">
-                          <Car className="h-5 w-5 text-warning" />
-                        </div>
-                        <div>
-                          <p className="font-semibold">{vehicle.plate}</p>
-                          <p className="text-sm text-muted-foreground">{vehicle.model}</p>
-                        </div>
+            {filteredAguardandoOS.map((os, idx) => (
+              <Card 
+                key={os.id || idx}
+                className="shadow-card transition-all hover:shadow-card-hover hover:-translate-y-0.5"
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-warning/10">
+                        <FileText className="h-5 w-5 text-warning" />
                       </div>
-                      <div className="flex flex-col items-end gap-1">
-                        <Badge 
-                          variant="outline"
-                          className={cn("text-xs", badgeVariants[statusColors[vehicle.status]])}
-                        >
-                          {statusLabels[vehicle.status]}
-                        </Badge>
-                        {vehicle.needs_tow && (
-                          <Badge variant="outline" className="text-xs bg-orange-100 text-orange-800 border-orange-300">
-                            <Truck className="h-3 w-3 mr-1" />
-                            Guincho
-                          </Badge>
-                        )}
+                      <div>
+                        <p className="font-semibold">OS {os.numero || '—'}</p>
+                        <p className="text-sm text-muted-foreground">{os.veiculo_placa || '—'}</p>
                       </div>
                     </div>
-                    {client && (
-                      <div className="mt-3 pt-3 border-t">
-                        <p className="text-sm text-muted-foreground truncate">{client.name}</p>
-                      </div>
-                    )}
-                    {vehicleOS.length > 0 && (
-                      <div className="mt-3 pt-3 border-t space-y-2">
-                        {vehicleOS.map((os, idx) => (
-                          <div key={os.id || idx} className="flex items-center gap-2">
-                            <FileText className="h-4 w-4 text-primary" />
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium truncate">
-                                OS {os.numero || '—'}
-                              </p>
-                              <p className="text-xs text-muted-foreground truncate">
-                                {os.cliente_nome || '—'} • {os.status || '—'}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })}
+                    <Badge 
+                      variant="outline"
+                      className={cn("text-xs", badgeVariants['warning'])}
+                    >
+                      {os.status || 'Aguardando Entrada'}
+                    </Badge>
+                  </div>
+                  {os.cliente_nome && (
+                    <div className="mt-3 pt-3 border-t">
+                      <p className="text-sm text-muted-foreground truncate">{os.cliente_nome}</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center rounded-lg border border-dashed bg-muted/30 p-12">
