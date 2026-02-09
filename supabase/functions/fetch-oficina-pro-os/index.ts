@@ -50,6 +50,24 @@ serve(async (req) => {
 
     const oficinaPro = createClient(oficinProUrl, oficinProKey);
 
+    // Diagnostic: list distinct statuses
+    if (action === 'list_statuses') {
+      const { data: statuses, error: sErr } = await oficinaPro
+        .from('service_orders')
+        .select('status');
+      if (sErr) {
+        return new Response(JSON.stringify({ error: sErr.message }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const unique = [...new Set((statuses || []).map((s: any) => s.status))];
+      return new Response(JSON.stringify({ statuses: unique }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Handle status update (check-in / check-out)
     if (action === 'update_status' && os_id) {
       const newStatus = body.new_status;
@@ -77,6 +95,23 @@ serve(async (req) => {
 
       if (updateError) {
         console.error('Error updating OS:', updateError);
+        // If enum error, try to discover valid values
+        if (updateError.message?.includes('enum')) {
+          const { data: allOrders } = await oficinaPro
+            .from('service_orders')
+            .select('status')
+            .limit(200);
+          const validStatuses = [...new Set((allOrders || []).map((o: any) => o.status))];
+          console.log('Available statuses in DB:', validStatuses);
+          return new Response(JSON.stringify({ 
+            error: 'Failed to update OS', 
+            details: updateError.message,
+            available_statuses: validStatuses 
+          }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
         return new Response(JSON.stringify({ error: 'Failed to update OS', details: updateError.message }), {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
