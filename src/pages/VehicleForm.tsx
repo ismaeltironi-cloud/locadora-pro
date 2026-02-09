@@ -4,8 +4,6 @@ import AppLayout from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -24,16 +22,17 @@ export default function VehicleForm() {
   
   const [formData, setFormData] = useState({
     plate: '',
+    brand: '',
     model: '',
+    year: '',
+    color: '',
+    chassis: '',
     km: '',
-    defect_description: '',
-    needs_tow: false,
     selected_client_id: clientId || '',
   });
 
   const [debouncedPlate, setDebouncedPlate] = useState('');
   
-  // Debounce plate input
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedPlate(formData.plate);
@@ -43,18 +42,20 @@ export default function VehicleForm() {
 
   const { data: existingVehicle, isLoading: searchingVehicle } = useVehicleByPlate(debouncedPlate);
 
-  // Auto-fill model if vehicle exists
   useEffect(() => {
     if (existingVehicle) {
       setFormData(prev => ({ 
         ...prev, 
+        brand: prev.brand === '' && existingVehicle.brand ? existingVehicle.brand : prev.brand,
         model: prev.model === '' ? existingVehicle.model : prev.model,
+        year: prev.year === '' && existingVehicle.year ? String(existingVehicle.year) : prev.year,
+        color: prev.color === '' && existingVehicle.color ? existingVehicle.color : prev.color,
+        chassis: prev.chassis === '' && existingVehicle.chassis ? existingVehicle.chassis : prev.chassis,
         km: prev.km === '' && existingVehicle.km ? String(existingVehicle.km) : prev.km,
       }));
     }
   }, [existingVehicle]);
 
-  // Update selected_client_id when clientId from params changes
   useEffect(() => {
     if (clientId) {
       setFormData(prev => ({ ...prev, selected_client_id: clientId }));
@@ -70,18 +71,20 @@ export default function VehicleForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedClientId) {
-      return;
-    }
+    if (!selectedClientId) return;
 
     try {
       await createVehicle.mutateAsync({
         client_id: selectedClientId,
         plate: formData.plate.toUpperCase(),
+        brand: formData.brand || null,
         model: formData.model,
-        defect_description: formData.defect_description || null,
-        needs_tow: formData.needs_tow,
+        year: formData.year ? parseInt(formData.year, 10) : null,
+        color: formData.color || null,
+        chassis: formData.chassis || null,
         km: formData.km ? parseInt(formData.km, 10) : null,
+        defect_description: null,
+        needs_tow: false,
         status: 'aguardando_entrada',
         created_by: user?.id || null,
       });
@@ -179,10 +182,20 @@ export default function VehicleForm() {
                 <Alert>
                   <Info className="h-4 w-4" />
                   <AlertDescription>
-                    Veículo encontrado na base de dados. O modelo foi preenchido automaticamente.
+                    Veículo encontrado na base de dados. Os campos foram preenchidos automaticamente.
                   </AlertDescription>
                 </Alert>
               )}
+
+              <div className="space-y-2">
+                <Label htmlFor="brand">Marca</Label>
+                <Input
+                  id="brand"
+                  value={formData.brand}
+                  onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+                  placeholder="Ex: Fiat"
+                />
+              </div>
 
               <div className="space-y-2">
                 <Label htmlFor="model">Modelo *</Label>
@@ -190,9 +203,32 @@ export default function VehicleForm() {
                   id="model"
                   value={formData.model}
                   onChange={(e) => setFormData({ ...formData, model: e.target.value })}
-                  placeholder="Ex: Fiat Uno 2020"
+                  placeholder="Ex: Uno"
                   required
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="year">Ano</Label>
+                  <Input
+                    id="year"
+                    type="number"
+                    value={formData.year}
+                    onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                    placeholder="Ex: 2020"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="color">Cor</Label>
+                  <Input
+                    id="color"
+                    value={formData.color}
+                    onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                    placeholder="Ex: Prata"
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -207,25 +243,14 @@ export default function VehicleForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="defect_description">Descrição do Defeito</Label>
-                <Textarea
-                  id="defect_description"
-                  value={formData.defect_description}
-                  onChange={(e) => setFormData({ ...formData, defect_description: e.target.value })}
-                  placeholder="Descreva o defeito ou problema do veículo..."
-                  rows={4}
+                <Label htmlFor="chassis">Chassi</Label>
+                <Input
+                  id="chassis"
+                  value={formData.chassis}
+                  onChange={(e) => setFormData({ ...formData, chassis: e.target.value.toUpperCase() })}
+                  placeholder="Ex: 9BWZZZ377VT004251"
+                  maxLength={17}
                 />
-              </div>
-
-              <div className="flex items-center space-x-2 pt-2">
-                <Checkbox
-                  id="needs_tow"
-                  checked={formData.needs_tow}
-                  onCheckedChange={(checked) => setFormData({ ...formData, needs_tow: checked === true })}
-                />
-                <Label htmlFor="needs_tow" className="cursor-pointer">
-                  Guincho
-                </Label>
               </div>
 
               <div className="flex gap-3 pt-4">
