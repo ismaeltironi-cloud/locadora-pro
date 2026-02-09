@@ -13,6 +13,7 @@ import VehicleForm from "./pages/VehicleForm";
 import VehicleDetail from "./pages/VehicleDetail";
 import Users from "./pages/Users";
 import Reports from "./pages/Reports";
+import OSDetail from "./pages/OSDetail";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
 
@@ -115,6 +116,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <VehicleDetail />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/os/:osId"
+        element={
+          <ProtectedRoute>
+            <OSDetail />
           </ProtectedRoute>
         }
       />

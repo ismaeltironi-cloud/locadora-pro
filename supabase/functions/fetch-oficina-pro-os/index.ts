@@ -12,7 +12,6 @@ serve(async (req) => {
   }
 
   try {
-    // Validate auth
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -36,11 +35,9 @@ serve(async (req) => {
       });
     }
 
-    // Get params from request
     const body = await req.json();
-    const { plates, status } = body;
+    const { plates, status, os_id, action } = body;
 
-    // Connect to Oficina Pro
     const oficinProUrl = Deno.env.get('OFICINA_PRO_URL');
     const oficinProKey = Deno.env.get('OFICINA_PRO_ANON_KEY');
 
@@ -53,21 +50,80 @@ serve(async (req) => {
 
     const oficinaPro = createClient(oficinProUrl, oficinProKey);
 
-    let query = oficinaPro.from('service_orders').select('*');
+    // Handle status update (check-in / check-out)
+    if (action === 'update_status' && os_id) {
+      const newStatus = body.new_status;
+      if (!newStatus) {
+        return new Response(JSON.stringify({ error: 'new_status required' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
 
-    // Filter by status if provided
+      const updateData: Record<string, unknown> = { status: newStatus };
+      if (newStatus === 'check_in') {
+        updateData.checkin_at = new Date().toISOString();
+      } else if (newStatus === 'check_out') {
+        updateData.checkout_at = new Date().toISOString();
+        updateData.data_conclusao = new Date().toISOString().split('T')[0];
+      }
+
+      const { data: updated, error: updateError } = await oficinaPro
+        .from('service_orders')
+        .update(updateData)
+        .eq('id', os_id)
+        .select('*, vehicle:vehicles(*), client:clients(*)')
+        .single();
+
+      if (updateError) {
+        console.error('Error updating OS:', updateError);
+        return new Response(JSON.stringify({ error: 'Failed to update OS', details: updateError.message }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      return new Response(JSON.stringify({ order: updated }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Handle fetch by ID
+    if (os_id && !action) {
+      const { data: order, error: orderError } = await oficinaPro
+        .from('service_orders')
+        .select('*, vehicle:vehicles(*), client:clients(*)')
+        .eq('id', os_id)
+        .single();
+
+      if (orderError) {
+        console.error('Error fetching OS:', orderError);
+        return new Response(JSON.stringify({ error: 'Failed to fetch OS', details: orderError.message }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      return new Response(JSON.stringify({ order }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Handle list query
+    let query = oficinaPro.from('service_orders').select('*, vehicle:vehicles(*), client:clients(*)');
+
     if (status) {
       query = query.eq('status', status);
     }
 
-    // Filter by plates if provided
     if (plates && Array.isArray(plates) && plates.length > 0) {
       query = query.in('veiculo_placa', plates.map((p: string) => p.toUpperCase()));
     }
 
-    // If neither filter provided, return error
     if (!status && (!plates || !Array.isArray(plates) || plates.length === 0)) {
-      return new Response(JSON.stringify({ error: 'status or plates filter required' }), {
+      return new Response(JSON.stringify({ error: 'status, plates, or os_id required' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
