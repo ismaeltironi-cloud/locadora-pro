@@ -35,6 +35,8 @@ export interface OficinaProOS {
   data_conclusao?: string;
   checkin_at?: string;
   checkout_at?: string;
+  checkin_photo_url?: string;
+  checkout_photo_url?: string;
   observacoes?: string;
   vehicle_id?: string;
   client_id?: string;
@@ -76,7 +78,7 @@ async function callOficinaProAPI(body: Record<string, unknown>) {
 }
 
 export function useOficinaProOS(options: UseOficinaProOSOptions = {}) {
-  const { plates, status, osId } = options;
+  const { plates, status } = options;
   const enabled = !!(status || (plates && plates.length > 0));
 
   return useQuery({
@@ -113,4 +115,19 @@ export async function updateOficinaProOSStatus(osId: string, newStatus: string) 
     new_status: newStatus,
   });
   return data.order as OficinaProOS;
+}
+
+export async function uploadOficinaProPhoto(
+  osId: string,
+  photoBase64: string,
+  type: 'checkin' | 'checkout',
+  contentType = 'image/jpeg'
+) {
+  const data = await callOficinaProAPI({
+    os_id: osId,
+    action: type === 'checkin' ? 'checkin_photo' : 'checkout_photo',
+    photo_base64: photoBase64,
+    content_type: contentType,
+  });
+  return data as { order: OficinaProOS; photo_url: string };
 }
