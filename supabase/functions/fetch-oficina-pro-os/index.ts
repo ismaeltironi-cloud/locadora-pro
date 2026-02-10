@@ -50,19 +50,33 @@ serve(async (req) => {
 
     const oficinaPro = createClient(oficinProUrl, oficinProKey);
 
-    // Diagnostic: list distinct statuses
+    // Diagnostic: discover schema info
     if (action === 'list_statuses') {
-      const { data: statuses, error: sErr } = await oficinaPro
+      // Get enum values from pg_enum
+      const { data: enumVals, error: enumErr } = await oficinaPro.rpc('get_enum_values', { enum_name: 'os_status' }).maybeSingle();
+      
+      // Fallback: list distinct statuses from data
+      const { data: statuses } = await oficinaPro
         .from('service_orders')
         .select('status');
-      if (sErr) {
-        return new Response(JSON.stringify({ error: sErr.message }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
       const unique = [...new Set((statuses || []).map((s: any) => s.status))];
-      return new Response(JSON.stringify({ statuses: unique }), {
+      
+      // Also list all tables to find photo/attachment tables
+      const { data: tables } = await oficinaPro.from('service_order_photos').select('*').limit(1);
+      const { data: tables2 } = await oficinaPro.from('os_photos').select('*').limit(1);
+      const { data: tables3 } = await oficinaPro.from('photos').select('*').limit(1);
+      const { data: tables4 } = await oficinaPro.from('attachments').select('*').limit(1);
+      
+      return new Response(JSON.stringify({ 
+        statuses: unique,
+        enum_values: enumVals,
+        photo_tables: {
+          service_order_photos: tables !== null ? 'EXISTS' : 'NOT_FOUND',
+          os_photos: tables2 !== null ? 'EXISTS' : 'NOT_FOUND',
+          photos: tables3 !== null ? 'EXISTS' : 'NOT_FOUND',
+          attachments: tables4 !== null ? 'EXISTS' : 'NOT_FOUND',
+        }
+      }), {
         status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
